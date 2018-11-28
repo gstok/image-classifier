@@ -1,4 +1,5 @@
-
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
 
 from __future__ import absolute_import
 from __future__ import division
@@ -29,7 +30,7 @@ CHECKPOINT_NAME = '/tmp/_retrain_checkpoint'
 FAKE_QUANT_OPS = ('FakeQuantWithMinMaxVars',
                   'FakeQuantWithMinMaxVarsPerChannel')
 
-
+# 图像存储地址，测试百分比，验证百分比
 def create_image_lists(image_dir, testing_percentage, validation_percentage):
   if not tf.gfile.Exists(image_dir):
     # 如果图像目录不存在与文件系统，提示
@@ -88,7 +89,6 @@ def create_image_lists(image_dir, testing_percentage, validation_percentage):
     # file_list里面存储的是类别目录下所有图片列表
     for file_name in file_list:
       base_name = os.path.basename(file_name)
-      print(base_name);
       # We want to ignore anything after '_nohash_' in the file name when
       # deciding which set to put an image in, the data set creator has a way of
       # grouping photos that are close variations of each other. For example
@@ -96,7 +96,6 @@ def create_image_lists(image_dir, testing_percentage, validation_percentage):
       # the same leaf.
       # 忽略文件名_nohash__之后的任何内容
       hash_name = re.sub(r'_nohash_.*$', '', file_name)
-      print(hash_name);
       # This looks a bit magical, but we need to decide whether this file should
       # go into the training, testing, or validation sets, and we want to keep
       # existing files in the same set even if more files are subsequently
@@ -105,19 +104,31 @@ def create_image_lists(image_dir, testing_percentage, validation_percentage):
       # itself, so we do a hash of that and then use that to generate a
       # probability value that we use to assign it.
       # compat.as_bytes这是为了兼容低版本的python，出来所有都是unicode
+      # 转换完成文件名之后取SHA1 Hash，这是一个大的十六进制数字符串
       hash_name_hashed = hashlib.sha1(tf.compat.as_bytes(hash_name)).hexdigest()
-      print(hash_name_hashed);
-      quit();
-      percentage_hash = ((int(hash_name_hashed, 16) %
-                          (MAX_NUM_IMAGES_PER_CLASS + 1)) *
-                         (100.0 / MAX_NUM_IMAGES_PER_CLASS))
+      #   print(hash_name_hashed);
+      num = int(hash_name_hashed, 16);
+      #   print(num);
+      #   quit();
+
+      # 把十六进制字符串转换成为十进制数 和最大图片类+1 相除求余数
+      # 随机的hash值和最大范围求余数，计算出一个分布(0 ~ MAX_NUM_IMAGES_PER_CLASS)，继而相对于最大值求出一个百分比
+      a = (int(hash_name_hashed, 16) % (MAX_NUM_IMAGES_PER_CLASS + 1));
+      percentage_hash = (
+          a * 
+          (100.0 / MAX_NUM_IMAGES_PER_CLASS)
+      )
+
+      # 如果百分比Hash小于验证百分比，添加进入验证集合
       if percentage_hash < validation_percentage:
         validation_images.append(base_name)
+      # 如果百分比Hash小于测试百分比 + 验证百分比，添加进入测试集合
       elif percentage_hash < (testing_percentage + validation_percentage):
         testing_images.append(base_name)
+      # 添加进入训练集合
       else:
         training_images.append(base_name)
-        
+
     result[label_name] = {
         'dir': dir_name,
         'training': training_images,
@@ -589,6 +600,9 @@ def main(_):
   # 获取文件夹结构，且为所有的图片创建列表
   image_lists = create_image_lists(FLAGS.image_dir, FLAGS.testing_percentage,
                                    FLAGS.validation_percentage)
+
+  
+
   class_count = len(image_lists.keys())
   if class_count == 0:
     tf.logging.error('No valid folders of images found at ' + FLAGS.image_dir)
@@ -605,9 +619,15 @@ def main(_):
       FLAGS.random_brightness)
 
   # Set up the pre-trained graph.
+  # 加载模块，设置预训练的图
   module_spec = hub.load_module_spec(FLAGS.tfhub_module)
+
+  print(1234);
+
   graph, bottleneck_tensor, resized_image_tensor, wants_quantization = (
       create_module_graph(module_spec))
+
+  print(5678);
 
   # Add the new layer that we'll be training.
   # 在训练之前，添加一个新的层
@@ -616,6 +636,8 @@ def main(_):
      ground_truth_input, final_tensor) = add_final_retrain_ops(
          class_count, FLAGS.final_tensor_name, bottleneck_tensor,
          wants_quantization, is_training=True)
+
+  print(9999);
 
   with tf.Session(graph=graph) as sess:
     # Initialize all weights: for the module to their pretrained values,

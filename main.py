@@ -7,6 +7,7 @@ import os;
 import re;
 import argparse;
 import sys;
+import hashlib;
 
 # TF.logging.info("你好，世界");
 
@@ -18,9 +19,13 @@ FLAGS = None;
 
 def main(_):
     print("你好，世界");
-    print(FLAGS.image_dir);
-    k = tf.compat.as_bytes("1234");
-    print(k);
+    # print(FLAGS.image_dir);
+    # k = tf.compat.as_bytes("1234");
+    # print(k);
+    handle = "https://tfhub.dev/google/imagenet/inception_v3/feature_vector/1"
+    # handle = "https://tfhub.dev/google/imagenet/inception_v1/feature_vector/1"
+    name = hashlib.sha1(handle.encode("utf8")).hexdigest()
+    print(name)
 
 
 if __name__ == '__main__':
