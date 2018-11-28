@@ -88,6 +88,7 @@ def create_image_lists(image_dir, testing_percentage, validation_percentage):
     # file_list里面存储的是类别目录下所有图片列表
     for file_name in file_list:
       base_name = os.path.basename(file_name)
+      print(base_name);
       # We want to ignore anything after '_nohash_' in the file name when
       # deciding which set to put an image in, the data set creator has a way of
       # grouping photos that are close variations of each other. For example
@@ -95,6 +96,7 @@ def create_image_lists(image_dir, testing_percentage, validation_percentage):
       # the same leaf.
       # 忽略文件名_nohash__之后的任何内容
       hash_name = re.sub(r'_nohash_.*$', '', file_name)
+      print(hash_name);
       # This looks a bit magical, but we need to decide whether this file should
       # go into the training, testing, or validation sets, and we want to keep
       # existing files in the same set even if more files are subsequently
@@ -102,7 +104,10 @@ def create_image_lists(image_dir, testing_percentage, validation_percentage):
       # To do that, we need a stable way of deciding based on just the file name
       # itself, so we do a hash of that and then use that to generate a
       # probability value that we use to assign it.
+      # compat.as_bytes这是为了兼容低版本的python，出来所有都是unicode
       hash_name_hashed = hashlib.sha1(tf.compat.as_bytes(hash_name)).hexdigest()
+      print(hash_name_hashed);
+      quit();
       percentage_hash = ((int(hash_name_hashed, 16) %
                           (MAX_NUM_IMAGES_PER_CLASS + 1)) *
                          (100.0 / MAX_NUM_IMAGES_PER_CLASS))
@@ -112,6 +117,7 @@ def create_image_lists(image_dir, testing_percentage, validation_percentage):
         testing_images.append(base_name)
       else:
         training_images.append(base_name)
+        
     result[label_name] = {
         'dir': dir_name,
         'training': training_images,

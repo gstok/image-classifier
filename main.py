@@ -13,9 +13,14 @@ import sys;
 # print(os.path.basename("/usr/lib/bin/hhss.txt"))
 # print(re.sub(r'[^a-z0-9]+', ' ', '鸟，世界s12'));
 
+FLAGS = None;
+
 
 def main(_):
     print("你好，世界");
+    print(FLAGS.image_dir);
+    k = tf.compat.as_bytes("1234");
+    print(k);
 
 
 if __name__ == '__main__':
