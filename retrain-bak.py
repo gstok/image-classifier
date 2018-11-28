@@ -163,7 +163,7 @@ def get_bottleneck_path(image_lists, label_name, index, bottleneck_dir,
   return get_image_path(image_lists, label_name, index, bottleneck_dir,
                         category) + '_' + module_name + '.txt'
 
-
+# 看到这里了
 def create_module_graph(module_spec):
   height, width = hub.get_expected_image_size(module_spec)
   with tf.Graph().as_default() as graph:
@@ -340,7 +340,7 @@ def get_random_distorted_bottlenecks(
     ground_truths.append(label_index)
   return bottlenecks, ground_truths
 
-
+# 判断是否需要加工扭曲图像，主要是判断水平翻转，放大缩小，平移等标志
 def should_distort_images(flip_left_right, random_crop, random_scale,
                           random_brightness):
   return (flip_left_right or (random_crop != 0) or (random_scale != 0) or
@@ -614,6 +614,7 @@ def main(_):
     return -1
 
   # See if the command-line flags mean we're applying any distortions.
+  # 判断是否需要对图像进行干扰
   do_distort_images = should_distort_images(
       FLAGS.flip_left_right, FLAGS.random_crop, FLAGS.random_scale,
       FLAGS.random_brightness)
@@ -625,7 +626,9 @@ def main(_):
   print(1234);
 
   graph, bottleneck_tensor, resized_image_tensor, wants_quantization = (
-      create_module_graph(module_spec))
+    # 创建模块图，传入加载的模块
+    create_module_graph(module_spec)
+  )
 
   print(5678);
 
@@ -898,6 +901,7 @@ if __name__ == '__main__':
       '--flip_left_right',
       default=False,
       help="""\
+      是否水平地随机翻转一半训练图像
       Whether to randomly flip half of the training images horizontally.\
       """,
       action='store_true'
@@ -907,6 +911,7 @@ if __name__ == '__main__':
       type=int,
       default=0,
       help="""\
+      确定随机裁剪训练图像的余量的百分比
       A percentage determining how much of a margin to randomly crop off the
       training images.\
       """
@@ -916,6 +921,7 @@ if __name__ == '__main__':
       type=int,
       default=0,
       help="""\
+      确定随机放大训练图像大小的百分比
       A percentage determining how much to randomly scale up the size of the
       training images by.\
       """
@@ -925,6 +931,7 @@ if __name__ == '__main__':
       type=int,
       default=0,
       help="""\
+      确定向上或向下随机乘以训练图像输入像素多少的百分比
       A percentage determining how much to randomly multiply the training image
       input pixels up or down by.\
       """
