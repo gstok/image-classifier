@@ -37,38 +37,55 @@ def create_image_lists(image_dir, testing_percentage, validation_percentage):
     return None
   # 创建一个默认内置排序的字典  
   result = collections.OrderedDict()
-  #tf.gfile.Walk是递归目录树的方法
+  #tf.gfile.Walk是递归目录树的方法，此方法返回一个元组列表x[0]是目录名称
   sub_dirs = sorted(x[0] for x in tf.gfile.Walk(image_dir))
+
+
   # The root directory comes first, so skip it.
   is_root_dir = True
+
+  # subdir是每一个子目录
   for sub_dir in sub_dirs:
     if is_root_dir:
+      # 根目录的话跳过，不对跟目录下面的图片进行分析
       is_root_dir = False
       continue
+    # 对拓展名进行排序，兼容处理，生成拓展名列表
     extensions = sorted(set(os.path.normcase(ext)  # Smash case on Windows.
                             for ext in ['JPEG', 'JPG', 'jpeg', 'jpg']))
     file_list = []
+    # 获取文件夹最后一个路径，也就是长路径下的文件夹名
     dir_name = os.path.basename(sub_dir)
     if dir_name == image_dir:
       continue
+    # 打印日志
     tf.logging.info("Looking for images in '" + dir_name + "'")
+
+
     for extension in extensions:
       file_glob = os.path.join(image_dir, dir_name, '*.' + extension)
+      # Glob函数为通过通配符返回匹配的文件列表
       file_list.extend(tf.gfile.Glob(file_glob))
+
+    #列表为空
     if not file_list:
       tf.logging.warning('No files found')
       continue
+    # 列表内图片个数小于20
     if len(file_list) < 20:
       tf.logging.warning(
           'WARNING: Folder has less than 20 images, which may cause issues.')
+    # 大于上限
     elif len(file_list) > MAX_NUM_IMAGES_PER_CLASS:
       tf.logging.warning(
           'WARNING: Folder {} has more than {} images. Some images will '
           'never be selected.'.format(dir_name, MAX_NUM_IMAGES_PER_CLASS))
+    # 取出dirname之中的非字母数字字符，作为label_name
     label_name = re.sub(r'[^a-z0-9]+', ' ', dir_name.lower())
     training_images = []
     testing_images = []
     validation_images = []
+    # file_list里面存储的是类别目录下所有图片列表
     for file_name in file_list:
       base_name = os.path.basename(file_name)
       # We want to ignore anything after '_nohash_' in the file name when
@@ -76,6 +93,7 @@ def create_image_lists(image_dir, testing_percentage, validation_percentage):
       # grouping photos that are close variations of each other. For example
       # this is used in the plant disease data set to group multiple pictures of
       # the same leaf.
+      # 忽略文件名_nohash__之后的任何内容
       hash_name = re.sub(r'_nohash_.*$', '', file_name)
       # This looks a bit magical, but we need to decide whether this file should
       # go into the training, testing, or validation sets, and we want to keep
@@ -586,6 +604,7 @@ def main(_):
       create_module_graph(module_spec))
 
   # Add the new layer that we'll be training.
+  # 在训练之前，添加一个新的层
   with graph.as_default():
     (train_step, cross_entropy, bottleneck_input,
      ground_truth_input, final_tensor) = add_final_retrain_ops(

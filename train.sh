@@ -1,4 +1,4 @@
-python retrain-bak.py \
+python3 retrain-bak.py \
 --image_dir ./images/ \
 --how_many_training_steps 10000 \
 --bottleneck_dir ./result/bottleneck/ \
